@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Find Your Era | The Biscotti Company</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:   #7ebc25;
+      --brown:   #5b3e1c;
+      --gray:    #666666;
+      --gold:    #e3c268;
+      --cream:   #F8F5F0;
+      --white:   #FFFFFF;
+      --divider: #E8E0D4;
+      --font:    Georgia, 'Times New Roman', serif;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--cream);
+      color: var(--brown);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    .container { width: 100%; max-width: 420px; margin: 0 auto; }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand header */
+    .brand { text-align: center; margin-bottom: 2rem; }
+    .brand-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
+    .brand-rule { width: 36px; height: 2px; background: var(--green); margin: 0 auto 1.25rem; }
+    .brand-title { font-size: 30px; font-weight: normal; line-height: 1.2; color: var(--brown); margin-bottom: 10px; }
+    .brand-title strong { font-weight: bold; }
+    .brand-sub { font-size: 13px; color: var(--gray); font-style: italic; line-height: 1.65; }
+
+    /* Intro */
+    .intro-desc { font-size: 15px; line-height: 1.9; color: var(--gray); text-align: center; margin-bottom: 2.25rem; }
+
+    /* Gold pill */
+    .pill {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--brown);
+      font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 5px 14px; margin-bottom: 1.25rem;
+      font-weight: bold;
+    }
+
+    /* Progress */
+    .progress { margin-bottom: 2rem; }
+    .progress-meta { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .progress-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray); }
+    .progress-count { font-size: 10px; color: var(--green); font-weight: bold; letter-spacing: 0.06em; }
+    .progress-track { height: 2px; background: var(--divider); }
+    .progress-fill  { height: 100%; background: var(--green); transition: width 0.5s ease; }
+
+    /* Question */
+    .q-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gray); text-align: center; margin-bottom: 10px; }
+    .q-text  { font-size: 21px; font-weight: bold; color: var(--brown); text-align: center; line-height: 1.35; margin-bottom: 1.75rem; }
+
+    /* Options */
+    .options { display: flex; flex-direction: column; gap: 0.625rem; }
+    .option {
+      background: var(--white);
+      border: 1.5px solid var(--divider);
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .option:hover    { border-color: var(--green); }
+    .option.selected { border-color: var(--green); background: #f4fbea; }
+    .option-title { font-size: 15px; font-weight: bold; color: var(--brown); margin-bottom: 3px; }
+    .option-sub   { font-size: 12px; color: var(--gray); line-height: 1.5; font-style: italic; }
+    .option-tag   {
+      display: inline-block; margin-top: 6px;
+      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--brown); background: var(--gold);
+      padding: 2px 8px; font-style: normal; font-weight: bold;
+    }
+
+    /* Buttons */
+    .btn {
+      display: block; width: 100%;
+      padding: 1rem 1.25rem;
+      background: var(--green);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 12px; font-weight: bold;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      border: none; border-radius: 2px;
+      cursor: pointer; margin-top: 1.25rem;
+      transition: background 0.2s;
+      text-align: center; text-decoration: none;
+    }
+    .btn:hover    { background: #6aa51e; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray);
+      border: 1.5px solid var(--divider);
+      font-weight: normal;
+    }
+    .btn-ghost:hover { border-color: var(--gray); color: var(--brown); background: transparent; }
+
+    /* Loading */
+    .loading-wrap { text-align: center; padding: 5rem 0; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--divider);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--gray); font-style: italic; }
+
+    /* Result */
+    .result-header { text-align: center; margin-bottom: 1.75rem; }
+    .result-era  { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
+    .result-name { font-size: 28px; font-weight: bold; color: var(--brown); line-height: 1.2; margin-bottom: 1rem; }
+    .result-rule { width: 36px; height: 2px; background: var(--green); margin: 0 auto 1.25rem; }
+    .result-desc { font-size: 15px; line-height: 1.85; color: var(--gray); font-style: italic; }
+    .result-card {
+      background: var(--white);
+      border: 1.5px solid var(--divider);
+      border-left: 3px solid var(--gold);
+      border-radius: 2px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .result-card-label { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gray); margin-bottom: 6px; }
+    .result-card-text  { font-size: 14px; color: var(--brown); line-height: 1.65; }
+
+    /* Footer */
+    .footer { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--divider); }
+    .footer-text { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray); line-height: 1.9; opacity: 0.7; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="brand">
+      <div class="brand-eyebrow">The Biscotti Company</div>
+      <div class="brand-rule"></div>
+      <div class="brand-title">Find Your<br><strong>Biscotti Era.</strong></div>
+      <div class="brand-sub">Three questions. One flavor. Zero crumbs.</div>
+    </div>
+    <p class="intro-desc">
+      Every era has a vibe.<br>Yours has a biscotti.<br><br>
+      Answer three questions and we will match you to your flavor.
+    </p>
+    <button class="btn" onclick="show('screen-q1')">Start the Quiz</button>
+    <div class="footer">
+      <div class="footer-text">Small-Batch &nbsp;&bull;&nbsp; Long Island, NY<br>A 200-Year Sicilian Recipe</div>
+    </div>
+  </div>
+
+  <!-- Q1: ERA / VIBE -->
+  <div class="screen" id="screen-q1">
+    <div class="brand"><div class="brand-eyebrow">The Biscotti Company</div><div class="brand-rule"></div></div>
+    <div class="progress">
+      <div class="progress-meta">
+        <span class="progress-label">Your Vibe</span>
+        <span class="progress-count">1 / 3</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:33%"></div></div>
+    </div>
+    <div class="q-label">Question One</div>
+    <div class="q-text">What is your current era?</div>
+    <div class="options">
+      <div class="option" onclick="pick('q1','unbothered',this)">
+        <div class="option-title">Dunked and Unbothered</div>
+        <div class="option-sub">Peace, quiet, and zero drama. You have figured something out.</div>
+      </div>
+      <div class="option" onclick="pick('q1','maincharacter',this)">
+        <div class="option-title">Main Character Energy</div>
+        <div class="option-sub">Bold choices only. No apologies. You ate and left no crumbs.</div>
+      </div>
+      <div class="option" onclick="pick('q1','chaotic',this)">
+        <div class="option-title">Built Different</div>
+        <div class="option-sub">Unpredictable. Colorful. Somehow works every single time.</div>
+      </div>
+      <div class="option" onclick="pick('q1','cozy',this)">
+        <div class="option-title">Long and Hard Since Day One</div>
+        <div class="option-sub">Classic. Consistent. You have been doing this longer than most.</div>
+      </div>
+    </div>
+    <button class="btn" id="btn-q1" disabled onclick="show('screen-q2')">Next</button>
+  </div>
+
+  <!-- Q2: BEVERAGE -->
+  <div class="screen" id="screen-q2">
+    <div class="brand"><div class="brand-eyebrow">The Biscotti Company</div><div class="brand-rule"></div></div>
+    <div class="progress">
+      <div class="progress-meta">
+        <span class="progress-label">Your Order</span>
+        <span class="progress-count">2 / 3</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:66%"></div></div>
+    </div>
+    <div class="q-label">Question Two</div>
+    <div class="q-text">Your biscotti needs a pairing.<br>What are you drinking?</div>
+    <div class="options">
+      <div class="option" onclick="pick('q2','coffee',this)">
+        <div class="option-title">Coffee</div>
+        <div class="option-sub">A proper cup. Hot, classic, no nonsense.</div>
+        <span class="option-tag">The Original Ritual</span>
+      </div>
+      <div class="option" onclick="pick('q2','coldbrew',this)">
+        <div class="option-title">Cold Brew</div>
+        <div class="option-sub">Ice cold, no explanation needed.</div>
+        <span class="option-tag">Twice Baked Approved</span>
+      </div>
+      <div class="option" onclick="pick('q2','tea',this)">
+        <div class="option-title">Tea</div>
+        <div class="option-sub">Earl Grey, green, chamomile. You know what you like.</div>
+        <span class="option-tag">The Classic Era</span>
+      </div>
+      <div class="option" onclick="pick('q2','matcha',this)">
+        <div class="option-title">Matcha Latte</div>
+        <div class="option-sub">Aesthetic, intentional, and very much on brand.</div>
+        <span class="option-tag">Unbothered Era</span>
+      </div>
+      <div class="option" onclick="pick('q2','bubbletea',this)">
+        <div class="option-title">Bubble Tea or Something Unexpected</div>
+        <div class="option-sub">Fun. A little extra. You are not here to be boring.</div>
+        <span class="option-tag">Built Different</span>
+      </div>
+    </div>
+    <button class="btn" id="btn-q2" disabled onclick="show('screen-q3')">Next</button>
+  </div>
+
+  <!-- Q3: FLAVOR PERSONALITY -->
+  <div class="screen" id="screen-q3">
+    <div class="brand"><div class="brand-eyebrow">The Biscotti Company</div><div class="brand-rule"></div></div>
+    <div class="progress">
+      <div class="progress-meta">
+        <span class="progress-label">The Real Question</span>
+        <span class="progress-count">3 / 3</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+    <div class="q-label">Question Three</div>
+    <div class="q-text">When it comes to biscotti,<br>you are...</div>
+    <div class="options">
+      <div class="option" onclick="pick('q3','classic',this)">
+        <div class="option-title">Long and hard, classic almond. Always.</div>
+        <div class="option-sub">The original. Timeless. No gimmicks needed.</div>
+        <span class="option-tag">Classic Era</span>
+      </div>
+      <div class="option" onclick="pick('q3','chocolate',this)">
+        <div class="option-title">Twice baked in chocolate. Obviously.</div>
+        <div class="option-sub">Indulgent, bold, and not even slightly sorry about it.</div>
+        <span class="option-tag">Main Character</span>
+      </div>
+      <div class="option" onclick="pick('q3','nuts',this)">
+        <div class="option-title">Dunked and unbothered. Nuts and fruit, no cap.</div>
+        <div class="option-sub">Cranberry, pistachio, almonds. You like texture and color.</div>
+        <span class="option-tag">Built Different</span>
+      </div>
+      <div class="option" onclick="pick('q3','both',this)">
+        <div class="option-title">Ate and left no crumbs. All of it.</div>
+        <div class="option-sub">Nuts AND chocolate. You do not choose. You collect.</div>
+        <span class="option-tag">Zero Crumbs</span>
+      </div>
+    </div>
+    <button class="btn" id="btn-q3" disabled onclick="calculate()">Find My Era</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="screen-loading">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text">Calculating your era...</div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="brand"><div class="brand-eyebrow">The Biscotti Company</div><div class="brand-rule"></div></div>
+    <div class="result-header">
+      <div class="pill">Your Era Has Arrived</div>
+      <div class="result-era" id="r-era"></div>
+      <div class="result-name" id="r-name"></div>
+      <div class="result-rule"></div>
+      <p class="result-desc" id="r-desc"></p>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Pairs Well With</div>
+      <div class="result-card-text" id="r-pairing"></div>
+    </div>
+    <a id="r-link" href="#" target="_blank" style="text-decoration:none">
+      <div class="btn">Shop My Flavor</div>
+    </a>
+    <button class="btn btn-ghost" onclick="restart()">Retake the Quiz</button>
+    <div class="footer">
+      <div class="footer-text">
+        The Biscotti Company<br>
+        Small-Batch &nbsp;&bull;&nbsp; Long Island, NY &nbsp;&bull;&nbsp; A 200-Year Sicilian Recipe
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const answers = {};
+
+const scoring = {
+  q1: {
+    unbothered:    { blueberryLemon:3, biscottini:2, almond:1 },
+    maincharacter: { doubleChocolate:3, chocolateLovers:2, cranberryPistachio:1 },
+    chaotic:       { cranberryPistachio:3, hamptonTrio:2, blueberryLemon:1 },
+    cozy:          { almond:3, biscottini:2, doubleChocolate:1 }
+  },
+  q2: {
+    coffee:    { almond:3, biscottini:2, doubleChocolate:1 },
+    coldbrew:  { doubleChocolate:3, chocolateLovers:2, almond:1 },
+    tea:       { almond:3, blueberryLemon:2, biscottini:1 },
+    matcha:    { blueberryLemon:3, biscottini:2, cranberryPistachio:1 },
+    bubbletea: { cranberryPistachio:3, hamptonTrio:2, blueberryLemon:1 }
+  },
+  q3: {
+    classic:   { almond:3, biscottini:2, blueberryLemon:1 },
+    chocolate: { doubleChocolate:3, chocolateLovers:2, hamptonTrio:1 },
+    nuts:      { cranberryPistachio:3, almond:2, hamptonTrio:1 },
+    both:      { chocolateLovers:3, hamptonTrio:2, doubleChocolate:1 }
+  }
+};
+
+const flavors = {
+  almond: {
+    era:  'The Classic Era',
+    name: 'Almond Biscotti',
+    desc: "Long and hard since 1800. You do not chase trends. You are the trend. Classic, confident, and completely unbothered by what everyone else is doing. The almond biscotti has been the move for 200 years. Just like you.",
+    pairing: 'A proper cup of coffee or tea. The original ritual, done right.',
+    url: 'https://thebiscotticompany.com/products/almond-biscotti'
+  },
+  doubleChocolate: {
+    era:  'The Main Character Era',
+    name: 'Double Chocolate Biscotti',
+    desc: "Twice baked in chocolate. Obviously. You do not do anything halfway. Bold, rich, and absolutely unforgettable. Once was never going to be enough for someone like you.",
+    pairing: 'Cold brew, an oat milk latte, or red wine if it is that kind of night. No cap.',
+    url: 'https://thebiscotticompany.com/products/double-chocolate-biscotti'
+  },
+  cranberryPistachio: {
+    era:  'The Built Different Era',
+    name: 'Cranberry Pistachio Biscotti',
+    desc: "Built different. Colorful, unexpected, and somehow it all works perfectly. You walk into rooms and change the energy. Cranberry pistachio was made for people who refuse to be boring.",
+    pairing: 'Matcha latte, bubble tea, or anything bright and unexpected.',
+    url: 'https://thebiscotticompany.com/products/cranberry-pistachio-biscotti'
+  },
+  blueberryLemon: {
+    era:  'The Unbothered Era',
+    name: 'Blueberry Lemon Biscotti',
+    desc: "Dunked and unbothered. You have figured something out that most people have not yet. Bright, fresh, and completely at peace. For the person who has graduated from chaos to taste.",
+    pairing: 'Matcha, iced tea, or a morning coffee at golden hour.',
+    url: 'https://thebiscotticompany.com/products/blueberry-lemon-biscotti'
+  },
+  biscottini: {
+    era:  'The Refined Era',
+    name: 'Biscottini',
+    desc: "Small. Precise. Built different. You do not need a lot. You just need the right thing. Biscottini are smaller, more refined, and somehow more satisfying than anything else on the table.",
+    pairing: 'A proper espresso or a quiet cup of tea. You respect the original ritual.',
+    url: 'https://thebiscotticompany.com/products/biscottini'
+  },
+  chocolateLovers: {
+    era:  'The All In Era',
+    name: 'Chocolate Lovers Four-Pack',
+    desc: "Ate and left no crumbs. Why choose when you can have everything? Fully committed, zero apologies. Four chocolate varieties because you have never done anything halfway and you are not about to start.",
+    pairing: 'Cold brew, hot coffee, or a glass of milk at midnight. You earned it.',
+    url: 'https://thebiscotticompany.com/products/chocolate-lovers-four-pack'
+  },
+  hamptonTrio: {
+    era:  'The Social Era',
+    name: 'Hampton Trio',
+    desc: "Not your grandma's cookie. Actually, yes it is. And that is exactly the point. Three flavors because you cannot pick just one and neither can anyone around you. You bring people together.",
+    pairing: 'Whatever everyone else is having. You make it work every time.',
+    url: 'https://thebiscotticompany.com/products/hampton-trio'
+  }
+};
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function pick(q, val, el) {
+  answers[q] = val;
+  document.querySelectorAll(`#screen-${q} .option`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-' + q).disabled = false;
+}
+
+function calculate() {
+  show('screen-loading');
+  setTimeout(() => {
+    const scores = Object.fromEntries(Object.keys(flavors).map(k => [k, 0]));
+    ['q1','q2','q3'].forEach(q => {
+      const map = scoring[q][answers[q]];
+      if (map) Object.entries(map).forEach(([f,p]) => scores[f] += p);
+    });
+    const winner = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+    const f = flavors[winner];
+    document.getElementById('r-era').textContent     = f.era;
+    document.getElementById('r-name').textContent    = f.name;
+    document.getElementById('r-desc').textContent    = f.desc;
+    document.getElementById('r-pairing').textContent = f.pairing;
+    document.getElementById('r-link').href            = f.url;
+    show('screen-result');
+  }, 1600);
+}
+
+function restart() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  ['q1','q2','q3'].forEach(q => document.getElementById('btn-'+q).disabled = true);
+  show('screen-intro');
+}
+</script>
+</body>
+</html>
